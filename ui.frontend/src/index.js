@@ -25,9 +25,11 @@ import { Constants, ModelManager } from '@adobe/aem-spa-page-model-manager';
 import { createBrowserHistory } from 'history';
 import React from 'react';
 import { render } from 'react-dom';
+import ReactDOM from 'react-dom';
 import { Router } from 'react-router-dom';
 import App from './App';
 import ComponentRegistry from './utils/component-registry';
+import ComponentClassesRegistry from './utils/component-classes-registry';
 import './components/import-components';
 import './index.css';
 
@@ -66,4 +68,39 @@ document.addEventListener('DOMContentLoaded', () => {
          render(<Component {...config} />, reactAnchor);
      })
   });
+
+    const resourceTypes = ComponentClassesRegistry.getResourceTypes();
+    console.log(resourceTypes)
+    for (let resType of resourceTypes) {
+        console.log(resType)
+        renderComponent(resType, document)
+    }
 });
+
+function collectReactAttributesForAemComponent(element) {
+    let componentProps = {}
+    for (let i = 0; i < element.attributes.length; i++) {
+        if (element.attributes[i].name.startsWith('data-react-attribute-')) {
+            componentProps[element.attributes[i].name.replace('data-react-attribute-', '')] = element.attributes[i].value;
+        }
+    }
+    return componentProps;
+}
+
+function renderComponent(resourceType, componentContext) {
+    if (!ComponentRegistry.getComponent(resourceType)) {
+        return
+    }
+    const Component = ComponentRegistry.getComponent(resourceType)
+    Array.prototype.slice.call(componentContext.querySelectorAll(ComponentClassesRegistry.getComponentClass(resourceType))).map(function (element) {
+        ReactDOM.render(<Component
+            aemData={collectReactAttributesForAemComponent(element)}
+        />, element);
+    });
+}
+
+window.parent.document.addEventListener('react-editable-reloaded', function (event) {
+    var updateDom = event.detail.context;
+    var resourceType = event.detail.resourceType;
+    renderComponent(resourceType, updateDom)
+})
