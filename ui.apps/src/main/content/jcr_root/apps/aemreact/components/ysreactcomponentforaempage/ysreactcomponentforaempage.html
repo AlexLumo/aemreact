@@ -1,0 +1,7 @@
+<sly data-sly-use.templates="core/wcm/components/commons/v1/templates.html"
+     data-sly-test.isEmpty="${!properties.title && !properties.subtitle}"
+     data-sly-call="${templates.placeholder @ isEmpty = isEmpty}"/>
+<div data-sly-test="${!isEmpty}" class="yevhen-slyva-component"
+     data-react-attribute-title="${properties.title}"
+     data-react-attribute-subtitle="${properties.subtitle}"/>
+
