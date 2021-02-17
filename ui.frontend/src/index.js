@@ -27,6 +27,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import { Router } from 'react-router-dom';
 import App from './App';
+import ComponentRegistry from './utils/component-registry';
 import './components/import-components';
 import './index.css';
 
@@ -46,5 +47,29 @@ document.addEventListener('DOMContentLoaded', () => {
       </Router>,
       document.getElementById('spa-root')
     );
+  });
+
+  document.querySelectorAll('.react-content-spot').forEach((reactAnchor) => {
+     const cqPath = reactAnchor.getAttribute('cqPath');
+     console.log('loaded');
+     if (!cqPath) {
+         console.log('no path');
+         return;
+     }
+     fetch(`${cqPath}.json`).then(res => res.json()).then((config) => {
+         console.log('loaded data', config);
+         const resourceType = config['sling:resourceType'];
+         if (!resourceType) {
+             console.log('no resource type');
+             return;
+         }
+         const Component = ComponentRegistry.getComponent(resourceType);
+         if (!Component) {
+             console.log('no component')
+             return;
+         }
+         console.log('mounting the component');
+         render(<Component {...config} />, reactAnchor);
+     })
   });
 });
